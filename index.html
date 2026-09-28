@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AEGIS — Smart Disaster & Climate Response Platform</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="aegis-app-container">
+    
+    <!-- TOP COMMAND HUD -->
+    <header class="top-hud-bar">
+      <div class="brand-section">
+        <div class="brand-logo-badge">Æ</div>
+        <div class="brand-title-wrap">
+          <h1>AEGIS // CLIMATE DEFENSE</h1>
+          <div class="subtitle">Smart Disaster & Hydrometeorological Intelligence</div>
+        </div>
+      </div>
+
+      <!-- Telemetry Ticker -->
+      <div class="hud-telemetry-feed">
+        <div class="feed-pulse-dot"></div>
+        <div id="telemetry-ticker-text">CONNECTING TO SATELLITE DOWNLINK...</div>
+      </div>
+
+      <!-- Top HUD Actions -->
+      <div class="top-hud-actions">
+        <div class="clock-display" id="top-bar-clock">2026-09-28 12:00:00 UTC</div>
+        
+        <button class="tactical-btn btn-danger trigger-sos-modal" title="Report Emergency Distress Beacon">
+          ⚠️ TRANSMIT SOS
+        </button>
+
+        <button class="tactical-btn btn-outline" id="btn-toggle-audio">
+          🔊 <span class="audio-label">AUDIO: ON</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- MAIN TACTICAL WORKSPACE -->
+    <main class="main-tactical-workspace">
+      
+      <!-- LEFT SIDEBAR NAVIGATION -->
+      <nav class="tactical-sidebar-nav" aria-label="Main Navigation">
+        <button class="nav-item active" data-view="view-war-room" title="War Room Overview [1]">
+          <span class="nav-icon">🌐</span>
+          <span class="nav-label">Command</span>
+        </button>
+        <button class="nav-item" data-view="view-cyclone" title="Cyclone Atmospheric Dynamics [2]">
+          <span class="nav-icon">🌀</span>
+          <span class="nav-label">Cyclone</span>
+        </button>
+        <button class="nav-item" data-view="view-flood" title="Flood & Hydrological Intelligence [3]">
+          <span class="nav-icon">🌊</span>
+          <span class="nav-label">Flood</span>
+        </button>
+        <button class="nav-item" data-view="view-citizen" title="Citizen Risk Assessment & Safety [4]">
+          <span class="nav-icon">🛡️</span>
+          <span class="nav-label">Citizen</span>
+        </button>
+        <button class="nav-item" data-view="view-dispatch" title="Emergency Response Dispatch [5]">
+          <span class="nav-icon">🚨</span>
+          <span class="nav-label">Dispatch</span>
+        </button>
+        <button class="nav-item" data-view="view-sandbox" title="What-If Simulation Sandbox [6]">
+          <span class="nav-icon">🧪</span>
+          <span class="nav-label">Sandbox</span>
+        </button>
+        <button class="nav-item" data-view="view-broadcast" title="CAP Alert Broadcast Studio [7]">
+          <span class="nav-icon">📡</span>
+          <span class="nav-label">Broadcast</span>
+        </button>
+
+        <div class="nav-spacer"></div>
+
+        <button class="nav-item" id="btn-reset-map" title="Reset Geospatial View [F]">
+          <span class="nav-icon">🎯</span>
+          <span class="nav-label">Recenter</span>
+        </button>
+      </nav>
+
+      <!-- CENTER GEOSPATIAL MAP VIEWPORT -->
+      <section class="map-viewport-container">
+        <canvas id="tactical-map-canvas"></canvas>
+
+        <!-- Floating HUD Overlays -->
+        <div class="floating-hud-overlay hud-top-left">
+          <div class="hud-panel-compact">
+            <div class="hud-stat-line">
+              <span class="text-dim">COORDINATES:</span>
+              <span id="hud-latlon" class="highlight-cyan">21.842° N | 88.352° E</span>
+            </div>
+            <div class="hud-stat-line">
+              <span class="text-dim">ELEVATION:</span>
+              <span id="hud-elevation" class="text-main">3.2m MSL</span>
+              <span id="hud-sector-risk" class="tactical-tag risk-critical">HIGH SURGE ZONE</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="floating-hud-overlay hud-top-right">
+          <button class="map-control-btn" id="btn-focus-bengal">Bengal Delta</button>
+          <button class="map-control-btn" id="btn-focus-gulf">Gulf Coast</button>
+        </div>
+
+        <div class="floating-hud-overlay hud-bottom-left">
+          <div class="layer-toggles-bar">
+            <label class="layer-toggle-chip">
+              <input type="checkbox" class="layer-checkbox" data-layer="radarSweep" checked>
+              Radar Sweep
+            </label>
+            <label class="layer-toggle-chip">
+              <input type="checkbox" class="layer-checkbox" data-layer="windParticles" checked>
+              Wind Streamlines
+            </label>
+            <label class="layer-toggle-chip">
+              <input type="checkbox" class="layer-checkbox" data-layer="floodInundation" checked>
+              Flood Inundation
+            </label>
+            <label class="layer-toggle-chip">
+              <input type="checkbox" class="layer-checkbox" data-layer="stormCone" checked>
+              Forecast Cone
+            </label>
+            <label class="layer-toggle-chip">
+              <input type="checkbox" class="layer-checkbox" data-layer="shelters" checked>
+              Shelters
+            </label>
+            <label class="layer-toggle-chip">
+              <input type="checkbox" class="layer-checkbox" data-layer="distressSOS" checked>
+              SOS Distress
+            </label>
+          </div>
+        </div>
+
+        <!-- Geographic Sector Inspection Drawer -->
+        <div class="sector-inspect-drawer" id="sector-inspect-drawer">
+          <div class="flex-between">
+            <span class="card-title">📍 Sector Telemetry</span>
+            <button class="modal-close-btn" id="close-sector-drawer">&times;</button>
+          </div>
+          <div style="margin-top: 10px; font-family: var(--font-mono); font-size: 11px;">
+            <div class="flex-between" style="margin-bottom: 6px;">
+              <span class="text-dim">SECTOR COORDS:</span>
+              <span id="sector-coords" class="highlight-cyan">21.84° N, 88.35° E</span>
+            </div>
+            <div class="flex-between" style="margin-bottom: 6px;">
+              <span class="text-dim">TERRAIN ELEVATION:</span>
+              <span id="sector-elev" class="text-main">2.4m MSL</span>
+            </div>
+            <div class="flex-between" style="margin-bottom: 6px;">
+              <span class="text-dim">ESTIMATED INUNDATION:</span>
+              <span id="sector-flood-depth" class="highlight-red">+1.85m</span>
+            </div>
+            <div class="flex-between" style="margin-bottom: 6px;">
+              <span class="text-dim">WIND EXPOSURE:</span>
+              <span id="sector-wind" class="text-amber">195 km/h</span>
+            </div>
+            <div class="flex-between" style="margin-bottom: 8px;">
+              <span class="text-dim">EVACUATION WINDOW:</span>
+              <span id="sector-evac-time" class="tag-full">Immediate (&lt; 2 hrs)</span>
+            </div>
+            <button class="tactical-btn btn-danger trigger-sos-modal" style="width: 100%;">
+              TRANSMIT RESCUE DISPATCH FOR SECTOR
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- RIGHT TACTICAL INFORMATION STACK -->
+      <aside class="tactical-side-drawer">
+        
+        <!-- ============================================== -->
+        <!-- VIEW 1: WAR ROOM / OPERATIONAL COMMAND -->
+        <!-- ============================================== -->
+        <div class="view-panel active" id="view-war-room">
+          <div class="tactical-card">
+            <div class="card-header-tactical">
+              <span class="card-title">Global Threat Summary</span>
+              <span class="tactical-tag risk-critical">LEVEL 4 - CRITICAL</span>
+            </div>
+            <div class="kpi-metrics-grid">
+              <div class="kpi-card">
+                <div class="kpi-label">Active Severe Warnings</div>
+                <div class="kpi-value highlight-red">04 ISSUED</div>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-label">Population in Deluge Zone</div>
+                <div class="kpi-value text-amber">24.6M</div>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-label">Monitored River Basins</div>
+                <div class="kpi-value highlight-cyan">18 BASINS</div>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-label">Open Multipurpose Shelters</div>
+                <div class="kpi-value text-emerald">1,240 HAVENS</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="tactical-card">
+            <div class="card-header-tactical">
+              <span class="card-title">Hazard Filter & Threat Layers</span>
+            </div>
+            <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+              <button class="map-control-btn hazard-filter-chip active" data-filter="all">All Compound Threats</button>
+              <button class="map-control-btn hazard-filter-chip" data-filter="cyclones">🌀 Cyclones</button>
+              <button class="map-control-btn hazard-filter-chip" data-filter="floods">🌊 Floods</button>
+            </div>
+            <p style="font-size: 11.5px; color: var(--text-muted); line-height: 1.6;">
+              Compound climate risk detected: <strong>Super Cyclone AMRITA</strong> trajectory aligns with astronomical spring tide crest, generating extreme storm surge overlap across the <strong>Lower Ganges & Sundarbans Basin</strong>.
+            </p>
+          </div>
+
+          <div class="tactical-card">
+            <div class="card-header-tactical">
+              <span class="card-title">Immediate Civil Defense Actions</span>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <button class="tactical-btn btn-danger trigger-sos-modal" style="width: 100%;">
+                🚨 TRANSMIT CIVIL EVACUATION BEACON
+              </button>
+              <button class="tactical-btn btn-secondary" id="btn-quick-cap" onclick="window.aegisApp.switchView('view-broadcast');">
+                📡 GENERATE EMERGENCY CAP BROADCAST
+              </button>
+              <button class="tactical-btn btn-outline" onclick="window.aegisApp.switchView('view-citizen');">
+                🛡️ CHECK CITIZEN SAFETY CHECKLIST
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- VIEW 2: CYCLONE TRACKING & ATMOSPHERIC DYNAMICS -->
+        <!-- ============================================== -->
+        <div class="view-panel" id="view-cyclone">
+          <div class="tactical-card">
+            <div class="card-header-tactical">
+              <span class="card-title">Cyclone Tracking Unit</span>
+              <span class="tactical-tag risk-critical" id="cyclone-cat-badge">CATEGORY 5 / EXTREME</span>
+            </div>
+            <select class="tactical-select" id="cyclone-storm-select"></select>
+
+            <div class="cyclone-intensity-meter">
+              <div class="cyclone-intensity-fill" id="cyclone-intensity-bar" style="width: 100%; background: #ff2a5f;"></div>
+            </div>
+
+            <div class="kpi-metrics-grid" style="margin-top: 10px;">
+              <div class="kpi-card">
+                <div class="kpi-label">Central Barometer</div>
+                <div class="kpi-value highlight-cyan" id="cyclone-pressure">912 hPa</div>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-label">Max Sustained Winds</div>
+                <div class="kpi-value highlight-red" id="cyclone-winds">265 km/h</div>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-label">Peak Wind Gusts</div>
+                <div class="kpi-value text-amber" id="cyclone-gusts">310 km/h</div>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-label">Coastal Surge Wave</div>
+                <div class="kpi-value highlight-cyan" id="cyclone-surge">+5.8m Peak</div>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-label">Forward Vector</div>
+                <div class="kpi-value" id="cyclone-heading">NNE @ 18 km/h</div>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-label">Landfall ETA</div>
+                <div class="kpi-value text-emerald" id="cyclone-eta">6h 20m</div>
+              </div>
+            </div>
+            <div style="margin-top: 10px; font-size: 11px; color: var(--text-muted);">
+              Target Landfall Sector: <strong class="text-main" id="cyclone-target">Sundarbans Delta Coast</strong><br>
+              Population in Direct Eyewall Path: <strong class="highlight-red" id="cyclone-pop">18.4 Million</strong>
+            </div>
+          </div>
+
+          <div class="tactical-card">
+            <div class="card-header-tactical">
+              <span class="card-title">Trajectory & Forecast Cone</span>
+            </div>
+            <div class="timeline-track-wrap" id="cyclone-timeline-track"></div>
+            <div id="timeline-stage-info" style="font-family: var(--font-mono); font-size: 10.5px; color: var(--cyan-primary); margin-top: 8px;">
+              TIMELINE FOCUS: NOW (Cat 5 Eyewall Active)
+            </div>
+          </div>
+
+          <div class="tactical-card">
+            <div class="card-header-tactical">
+              <span class="card-title">Coastal Surge & Overtopping Profiler</span>
+            </div>
+            <div id="cyclone-surge-sectors"></div>
+          </div>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- VIEW 3: FLOOD & HYDROLOGICAL DELUGE INTELLIGENCE -->
+        <!-- ============================================== -->
+        <div class="view-panel" id="view-flood">
+          <div class="tactical-card">
+            <div class="card-header-tactical">
+              <span class="card-title">Hydrological Basin Monitor</span>
+              <span class="tactical-tag risk-critical" id="basin-status">STAGE 4 - DELUGE</span>
+            </div>
+            <select class="tactical-select" id="flood-basin-select"></select>
+
+            <div style="margin-top: 14px;">
+              <div class="flex-between">
+                <span style="font-size: 11px; font-family: var(--font-mono); text-transform: uppercase;">
+                  🌊 Inundation Water Level Simulator
+                </span>
+                <span class="highlight-cyan" id="flood-slider-val" style="font-family: var(--font-mono); font-weight: bold; font-size: 15px;">+3.5m</span>
+              </div>
+              <input type="range" class="tactical-slider" id="flood-slider" min="0.0" max="6.0" step="0.1" value="3.5">
+            </div>
+
+            <!-- Dynamic Inundation Calculations -->
+            <div class="flood-metrics-container">
+              <div class="flood-metric-box">
+                <div class="kpi-label">Flooded Surface Area</div>
+                <div class="kpi-value highlight-cyan" id="metric-flood-area">1,820 km²</div>
+              </div>
+              <div class="flood-metric-box">
+                <div class="kpi-label">Displaced Population</div>
+                <div class="kpi-value highlight-red" id="metric-flood-pop">3,430,000</div>
+              </div>
+              <div class="flood-metric-box">
+                <div class="kpi-label">Submerged Bridges</div>
+                <div class="kpi-value text-amber" id="metric-flood-bridges">14 Bridges</div>
+              </div>
+              <div class="flood-metric-box">
+                <div class="kpi-label">Flooded Arterial Roads</div>
+                <div class="kpi-value" id="metric-flood-roads">378 km</div>
+              </div>
+            </div>
+            <div style="margin-top: 10px;">
+              <span id="metric-flood-rating" class="tactical-tag risk-critical">STAGE 4: CATASTROPHIC REGIONAL DELUGE</span>
+            </div>
+          </div>
+
+          <div class="tactical-card">
+            <div class="card-header-tactical">
+              <span class="card-title">Dam & Barrage Early Warning</span>
+              <span class="tactical-tag risk-warning" id="dam-risk-alert">EMERGENCY DISCHARGE</span>
+            </div>
+            <div style="font-size: 11.5px; margin-bottom: 6px;">
+              Structure: <strong class="text-main" id="dam-name">Farakka Barrage Reservoir</strong>
+            </div>
+            <div class="dam-bar-track">
+              <div class="dam-bar-fill" id="dam-storage-bar" style="width: 98.4%; background-color: #ff2a5f;"></div>
+            </div>
+            <div class="flex-between" style="font-family: var(--font-mono); font-size: 10.5px; color: var(--text-muted);">
+              <span id="dam-storage-pct">98.4% Capacity</span>
+              <span id="dam-gates">107 of 109 Gates Open</span>
+            </div>
+            <div style="font-family: var(--font-mono); font-size: 10.5px; color: var(--cyan-primary); margin-top: 4px;" id="dam-flow-rate">
+              Inflow: 64,200 m³/s | Outflow: 63,800 m³/s
+            </div>
+          </div>
+
+          <div class="tactical-card">
+            <div class="card-header-tactical">
+              <span class="card-title">Real-Time River Gauge Mesh</span>
+            </div>
+            <div class="gauges-grid-wrap" id="flood-gauges-grid"></div>
+          </div>
+
+          <div class="tactical-card">
+            <div class="card-header-tactical">
+              <span class="card-title">Drainage Surcharge & Embankment Leaks</span>
+            </div>
+            <div id="flood-chokepoints-list"></div>
+          </div>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- VIEW 4: CITIZEN RISK ASSESSMENT ("AM I SAFE?") -->
+        <!-- ============================================== -->
+        <div class="view-panel" id="view-citizen">
+          <div class="tactical-card">
+            <div class="card-header-tactical">
+              <span class="card-title">Location Risk Profiler</span>
+            </div>
+            <input type="text" class="tactical-input" id="citizen-search-input" placeholder="🔍 Search address, district, or city..." style="margin-bottom: 8px;">
+            <select class="tactical-select" id="citizen-city-select"></select>
+
+            <div class="citizen-score-hero" style="margin-top: 14px;">
+              <div>
+                <div class="kpi-label">Composite Threat Score</div>
+                <div class="citizen-big-score" id="citizen-overall-score">94</div>
+                <span class="score-scale">out of 100 max hazard index</span>
+              </div>
+              <div style="text-align: right;">
+                <span class="tactical-tag risk-critical" id="citizen-score-badge">EXTREME RISK TIER</span>
+                <div style="font-size: 11px; margin-top: 6px; color: var(--text-muted);" id="citizen-profile-name">Kolkata & Sundarbans</div>
+                <div style="font-size: 10px; font-family: var(--font-mono); color: var(--cyan-primary);" id="citizen-evac-status">MANDATORY EVACUATION</div>
+              </div>
+            </div>
+
+            <!-- Risk Vector Breakdown -->
+            <div style="margin-top: 14px;">
+              <div class="risk-breakdown-row">
+                <span>Flood Inundation</span>
+                <div class="risk-bar-track"><div class="risk-bar-fill" id="bar-flood-risk" style="width: 96%; background: #ff2a5f;"></div></div>
+                <span id="val-flood-risk" class="highlight-red">96/100</span>
+              </div>
+              <div class="risk-breakdown-row">
+                <span>Cyclone Wind Gusts</span>
+                <div class="risk-bar-track"><div class="risk-bar-fill" id="bar-wind-risk" style="width: 92%; background: #ff2a5f;"></div></div>
+                <span id="val-wind-risk" class="highlight-red">92/100</span>
+              </div>
+              <div class="risk-breakdown-row">
+                <span>Storm Surge Ingress</span>
+                <div class="risk-bar-track"><div class="risk-bar-fill" id="bar-surge-risk" style="width: 88%; background: #ff9f1c;"></div></div>
+                <span id="val-surge-risk" class="text-amber">88/100</span>
+              </div>
+              <div class="risk-breakdown-row">
+                <span>Power Grid Outage</span>
+                <div class="risk-bar-track"><div class="risk-bar-fill" id="bar-power-risk" style="width: 90%; background: #ff9f1c;"></div></div>
+                <span id="val-power-risk" class="text-amber">90/100</span>
+              </div>
+              <div class="risk-breakdown-row">
+                <span>Drainage Choke</span>
+                <div class="risk-bar-track"><div class="risk-bar-fill" id="bar-drain-risk" style="width: 95%; background: #ff2a5f;"></div></div>
+                <span id="val-drain-risk" class="highlight-red">95/100</span>
+              </div>
+            </div>
+
+            <button class="tactical-btn btn-primary" id="btn-generate-survival-pass" style="width: 100%; margin-top: 12px;">
+              🪪 GENERATE OFFLINE SURVIVAL PASS
+            </button>
+          </div>
+
+          <div class="tactical-card">
+            <div class="card-header-tactical">
+              <span class="card-title">Nearby Designated Safe Shelters</span>
+            </div>
+            <div id="citizen-shelters-list"></div>
+          </div>
+
+          <div class="tactical-card">
+            <div class="card-header-tactical">
+              <span class="card-title">Personal Action Timeline</span>
+            </div>
+            <div id="citizen-actions-list"></div>
+          </div>
+
+          <div class="tactical-card">
+            <div class="card-header-tactical">
+              <span class="card-title">72-Hour Survival Kit Readiness</span>
+              <span class="text-emerald" id="kit-readiness-pct" style="font-family: var(--font-mono); font-weight: bold;">70% PREPARED</span>
+            </div>
+            <div class="dam-bar-track" style="margin-bottom: 10px;">
+              <div class="dam-bar-fill" id="kit-progress-bar" style="width: 70%; background-color: #ff9f1c;"></div>
+            </div>
+            <div id="survival-kit-checklist"></div>
+          </div>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- VIEW 5: EMERGENCY RESPONSE DISPATCH & SOS -->
+        <!-- ============================================== -->
+        <div class="view-panel" id="view-dispatch">
+          <div class="tactical-card">
+            <div class="card-header-tactical">
+              <span class="card-title">Active SOS Distress Beacons</span>
+              <button class="tactical-btn btn-danger trigger-sos-modal" style="padding: 4px 8px; font-size: 10px;">
+                + REPORT SOS
+              </button>
+            </div>
+            <div id="dispatch-incidents-queue"></div>
+          </div>
+
+          <div class="tactical-card">
+            <div class="card-header-tactical">
+              <span class="card-title">Tactical Asset Dispatch</span>
+            </div>
+            <div id="dispatch-detail-box"></div>
+          </div>
+
+          <div class="tactical-card">
+            <div class="card-header-tactical">
+              <span class="card-title">Available Response Fleet</span>
+            </div>
+            <div id="dispatch-units-list"></div>
+          </div>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- VIEW 6: DISASTER SIMULATION SANDBOX ("WHAT-IF") -->
+        <!-- ============================================== -->
+        <div class="view-panel" id="view-sandbox">
+          <div class="tactical-card">
+            <div class="card-header-tactical">
+              <span class="card-title">Compound Hazard Sandbox</span>
+              <button class="tactical-btn btn-outline" id="btn-reset-scenario" style="padding: 3px 8px; font-size: 10px;">RESET</button>
+            </div>
+            <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 12px;">
+              Simulate compound catastrophic interactions: adjust tropical cyclone parameters, precipitation volumes, tidal surge, and structural defenses to compute projected impact.
+            </p>
+
+            <div class="sandbox-slider-group">
+              <div class="flex-between">
+                <span class="kpi-label">Tropical Cyclone Intensity</span>
+                <span class="highlight-red" id="val-sim-cat" style="font-family: var(--font-mono); font-weight: bold;">Cat 5</span>
+              </div>
+              <input type="range" class="tactical-slider" id="sim-cyclone-cat" min="1" max="5" step="1" value="5">
+            </div>
+
+            <div class="sandbox-slider-group">
+              <div class="flex-between">
+                <span class="kpi-label">24-Hour Rainfall Accumulation</span>
+                <span class="highlight-cyan" id="val-sim-rain" style="font-family: var(--font-mono); font-weight: bold;">320 mm</span>
+              </div>
+              <input type="range" class="tactical-slider" id="sim-rainfall" min="50" max="600" step="10" value="320">
+            </div>
+
+            <div class="sandbox-slider-group">
+              <div class="flex-between">
+                <span class="kpi-label">Coastal Storm Surge Peak</span>
+                <span class="highlight-cyan" id="val-sim-surge" style="font-family: var(--font-mono); font-weight: bold;">+5.2m</span>
+              </div>
+              <input type="range" class="tactical-slider" id="sim-surge" min="0.0" max="7.0" step="0.2" value="5.2">
+            </div>
+
+            <div class="sandbox-slider-group">
+              <div class="flex-between">
+                <span class="kpi-label">Astronomical King Tide Stage</span>
+                <span class="text-amber" id="val-sim-tide" style="font-family: var(--font-mono); font-weight: bold;">+3.6m</span>
+              </div>
+              <input type="range" class="tactical-slider" id="sim-tide" min="0.5" max="4.5" step="0.1" value="3.6">
+            </div>
+
+            <div class="sandbox-slider-group">
+              <div class="flex-between">
+                <span class="kpi-label">Coastal Levee & Sea Dike Integrity</span>
+                <span class="highlight-red" id="val-sim-levee" style="font-family: var(--font-mono); font-weight: bold;">60% Intact</span>
+              </div>
+              <input type="range" class="tactical-slider" id="sim-levee" min="0" max="100" step="5" value="60">
+            </div>
+
+            <div class="sandbox-slider-group">
+              <div class="flex-between">
+                <span class="kpi-label">Urban Stormwater Pump Operational Status</span>
+                <span class="text-amber" id="val-sim-drainage" style="font-family: var(--font-mono); font-weight: bold;">50% Online</span>
+              </div>
+              <input type="range" class="tactical-slider" id="sim-drainage" min="10" max="100" step="5" value="50">
+            </div>
+
+            <button class="tactical-btn btn-primary" id="btn-run-simulation" style="width: 100%; margin-top: 10px;">
+              ⚡ RUN SCENARIO SIMULATION
+            </button>
+          </div>
+
+          <div class="tactical-card">
+            <div class="card-header-tactical">
+              <span class="card-title">Projected Damage Assessment Matrix</span>
+            </div>
+            <div class="kpi-metrics-grid">
+              <div class="kpi-card">
+                <div class="kpi-label">Compound Flood Crest</div>
+                <div class="kpi-value highlight-cyan" id="sim-metric-crest">+8.10m MSL</div>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-label">Inundated Land Surface</div>
+                <div class="kpi-value highlight-red" id="sim-metric-area">2,480 km²</div>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-label">Displaced Population</div>
+                <div class="kpi-value text-amber" id="sim-metric-pop">5,140,000</div>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-label">Projected Economic Loss</div>
+                <div class="kpi-value highlight-red" id="sim-metric-damage">$18.40 Billion</div>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-label">Submerged Hospitals</div>
+                <div class="kpi-value highlight-red" id="sim-metric-hospitals">28 Facilities</div>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-label">Electrical Substations Offline</div>
+                <div class="kpi-value text-amber" id="sim-metric-substations">46 Grid Nodes</div>
+              </div>
+            </div>
+            <div style="margin-top: 10px; font-family: var(--font-mono); font-size: 11px;">
+              <span class="text-dim">EMERGENCY SHELTER DEFICIT:</span>
+              <strong class="highlight-red" id="sim-metric-deficit">1,679,000 Beds Short</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- VIEW 7: CAP EARLY WARNING & BROADCAST STUDIO -->
+        <!-- ============================================== -->
+        <div class="view-panel" id="view-broadcast">
+          <div class="tactical-card">
+            <div class="card-header-tactical">
+              <span class="card-title">CAP 1.2 Protocol Studio</span>
+              <span class="tactical-tag risk-critical">BROADCAST READY</span>
+            </div>
+            <div class="flex-between" style="gap: 10px; margin-bottom: 10px;">
+              <select class="tactical-select" id="broadcast-hazard-type">
+                <option value="cyclone">Super Cyclone Mandatory Evacuation</option>
+                <option value="flood">Flash Flood & River Deluge Alert</option>
+              </select>
+              <select class="tactical-select" id="broadcast-lang-select" style="max-width: 140px;">
+                <option value="en">English (EN)</option>
+                <option value="bn">বাংলা (Bengali)</option>
+                <option value="hi">हिन्दी (Hindi)</option>
+                <option value="es">Español (ES)</option>
+                <option value="tl">Tagalog (TL)</option>
+                <option value="fr">Français (FR)</option>
+              </select>
+            </div>
+
+            <!-- Public Alert Preview Card -->
+            <div class="tactical-card" style="background: rgba(255, 42, 95, 0.08); border-color: var(--red-critical);">
+              <div style="font-family: var(--font-mono); font-size: 10px; color: var(--red-critical); font-weight: bold; margin-bottom: 4px;">
+                🚨 CELL BROADCAST / WEA WIRELESS TRANSMISSION
+              </div>
+              <h4 id="broadcast-preview-title" style="font-size: 13px; font-weight: 800; color: #fff; margin-bottom: 6px;">
+                MANDATORY EVACUATION: SUPER CYCLONE AMRITA LANDFALL IMMINENT
+              </h4>
+              <p id="broadcast-preview-desc" style="font-size: 11.5px; color: var(--text-main); margin-bottom: 8px; line-height: 1.5;">
+                Super Cyclone AMRITA (Category 5) will make landfall within 6 hours. Destructive winds exceeding 260 km/h and catastrophic storm surge reaching 5.8m are anticipated.
+              </p>
+              <div style="font-size: 11px; background: rgba(0,0,0,0.4); padding: 8px; border-radius: var(--radius-sm); border-left: 3px solid var(--amber-alert);">
+                <strong>INSTRUCTION:</strong> <span id="broadcast-preview-instruction">Evacuate coastal sectors and low-lying delta areas immediately. Relocate to designated elevated cyclone shelters.</span>
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 8px; margin-top: 10px;">
+              <button class="tactical-btn btn-danger" id="btn-sound-siren" style="flex: 1;">
+                🔊 SOUND WEA SIREN
+              </button>
+              <button class="tactical-btn btn-secondary" id="btn-copy-cap-xml">
+                📋 COPY CAP XML
+              </button>
+              <button class="tactical-btn btn-outline" id="btn-copy-cap-json">
+                JSON
+              </button>
+            </div>
+          </div>
+
+          <div class="tactical-card">
+            <div class="card-header-tactical">
+              <span class="card-title">Raw CAP 1.2 XML Payload</span>
+            </div>
+            <pre id="broadcast-cap-code" style="font-family: var(--font-mono); font-size: 10px; color: var(--cyan-primary); background: #040810; padding: 10px; border-radius: var(--radius-sm); overflow-x: auto; max-height: 220px;"></pre>
+          </div>
+        </div>
+
+      </aside>
+    </main>
+
+    <!-- BOTTOM STATUS HUD -->
+    <footer class="bottom-status-bar">
+      <div class="status-left">
+        <div class="status-item">SYSTEM: <span>AEGIS v2.4.0-PROD</span></div>
+        <div class="status-item">DOPPLER RADAR: <span>ONLINE [S-BAND BENGAL]</span></div>
+        <div class="status-item">HYDRO SENSORS: <span>4,892 REPORTING (99.82% UPTIME)</span></div>
+      </div>
+      <div class="status-right">
+        <div class="status-item">SHORTCUTS: <span>[1-7] Tabs • [M] Audio • [F] Reset Map</span></div>
+      </div>
+    </footer>
+  </div>
+
+  <!-- ============================================== -->
+  <!-- MODAL: REPORT SOS EMERGENCY DISTRESS -->
+  <!-- ============================================== -->
+  <div class="tactical-modal-backdrop" id="report-sos-modal">
+    <div class="tactical-modal-window">
+      <div class="modal-header">
+        <span class="card-title highlight-red">🚨 TRANSMIT EMERGENCY DISTRESS BEACON</span>
+        <button class="modal-close-btn" id="close-sos-modal">&times;</button>
+      </div>
+      <p style="font-size: 11.5px; color: var(--text-muted); margin-bottom: 14px;">
+        Transmits authenticated SOS telemetry to regional civil defense command, search-and-rescue helicopters, and amphibious rescue teams.
+      </p>
+
+      <form id="report-sos-form">
+        <div style="margin-bottom: 12px;">
+          <label class="kpi-label">Primary Disaster Hazard</label>
+          <select class="tactical-select" id="sos-hazard">
+            <option value="Flood">Rising Flood Inundation (Water Trapped)</option>
+            <option value="Cyclone Wind">Cyclone Wind / Structural Collapse</option>
+            <option value="Storm Surge">Coastal Storm Surge Overtopping</option>
+            <option value="Levee Breach">River Embankment / Levee Breach</option>
+            <option value="Medical Emergency">Critical Medical Urgent Care</option>
+          </select>
+        </div>
+
+        <div style="margin-bottom: 12px;">
+          <label class="kpi-label">Location / Address / Landmark</label>
+          <input type="text" class="tactical-input" id="sos-location" placeholder="e.g. Kakdwip Ward 4 near Primary School" required>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
+          <div>
+            <label class="kpi-label">Trapped Persons Count</label>
+            <input type="number" class="tactical-input" id="sos-people" min="1" max="500" value="4" required>
+          </div>
+          <div>
+            <label class="kpi-label">Triage Urgency</label>
+            <select class="tactical-select" id="sos-urgency">
+              <option value="CRITICAL">CRITICAL (Immediate Life Threat)</option>
+              <option value="HIGH">HIGH (Rising Rapidly)</option>
+              <option value="URGENT">URGENT (Cut-Off Supplies)</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="margin-bottom: 12px;">
+          <label class="kpi-label">Medical Special Needs & Description</label>
+          <textarea class="tactical-input" id="sos-medical" rows="2" placeholder="e.g. 1 infant, 1 elderly on oxygen, water reached 2nd stair step..."></textarea>
+        </div>
+
+        <div style="margin-bottom: 14px;">
+          <label class="kpi-label">Field Photographic Evidence (Optional)</label>
+          <input type="file" id="sos-photo-input" accept="image/*" class="tactical-input" style="padding: 4px;">
+          <div id="sos-photo-preview" style="height: 60px; margin-top: 6px; border-radius: 4px; background-size: cover; background-position: center; border: 1px dashed var(--border-glow); display: flex; align-items: center; justify-content: center; font-size: 10px; color: var(--text-dim);">
+            No photo attached
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 10px; justify-content: flex-end;">
+          <button type="button" class="tactical-btn btn-outline" onclick="document.getElementById('report-sos-modal').classList.remove('open');">
+            CANCEL
+          </button>
+          <button type="submit" class="tactical-btn btn-danger">
+            📡 BROADCAST DISTRESS BEACON
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ============================================== -->
+  <!-- MODAL: OFFLINE CIVIL SURVIVAL PASS -->
+  <!-- ============================================== -->
+  <div class="tactical-modal-backdrop" id="survival-pass-modal">
+    <div class="tactical-modal-window">
+      <div class="modal-header">
+        <span class="card-title highlight-cyan">🪪 CIVIL DEFENSE OFFLINE SURVIVAL PASS</span>
+        <button class="modal-close-btn" id="close-survival-pass">&times;</button>
+      </div>
+
+      <div class="pass-id-card">
+        <div class="flex-between" style="margin-bottom: 10px; border-bottom: 1px solid var(--border-dim); padding-bottom: 6px;">
+          <div>
+            <span style="font-family: var(--font-mono); font-size: 10px; color: var(--cyan-primary);">CIVIL DISASTER SURVIVAL PASS</span>
+            <div style="font-family: var(--font-mono); font-weight: 800; font-size: 14px;" id="pass-serial-code">AEGIS-EVAC-KOL-8492</div>
+          </div>
+          <div class="pass-qr-mock">
+            <!-- Simulated QR code pattern -->
+            <svg viewBox="0 0 40 40" width="100%" height="100%">
+              <rect width="40" height="40" fill="#050811" />
+              <rect x="4" y="4" width="10" height="10" fill="#00f0ff" />
+              <rect x="26" y="4" width="10" height="10" fill="#00f0ff" />
+              <rect x="4" y="26" width="10" height="10" fill="#00f0ff" />
+              <rect x="18" y="10" width="4" height="4" fill="#00f0ff" />
+              <rect x="18" y="26" width="4" height="4" fill="#00f0ff" />
+              <rect x="26" y="22" width="6" height="6" fill="#00f0ff" />
+            </svg>
+          </div>
+        </div>
+
+        <div style="font-family: var(--font-mono); font-size: 11px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+          <div>
+            <span class="text-dim">ASSIGNED HAVEN:</span><br>
+            <strong class="text-main" id="pass-primary-shelter">Salt Lake Stadium Mega-Shelter</strong>
+          </div>
+          <div>
+            <span class="text-dim">REGISTERED SECTOR:</span><br>
+            <strong class="highlight-cyan" id="pass-location">Kolkata Coastal Delta</strong>
+          </div>
+          <div>
+            <span class="text-dim">LOCAL THREAT LEVEL:</span><br>
+            <strong class="highlight-red" id="pass-risk-level">SCORE 94/100 (STAGE 4 DELUGE)</strong>
+          </div>
+          <div>
+            <span class="text-dim">EMERGENCY RADIO FREQ:</span><br>
+            <strong class="text-emerald">162.550 MHz / 102.8 FM</strong>
+          </div>
+        </div>
+
+        <div style="margin-top: 12px; font-size: 9.5px; color: var(--text-muted); border-top: 1px dashed var(--border-glow); padding-top: 6px;">
+          VALID FOR PRIORITY ADMISSION TO DISASTER SHELTERS, EMERGENCY FOOD/WATER RATIONS, AND AIR-SEA EVACUATION TRANSPORT. KEEP SCREENSHOT OR PRINTED COPY.
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 10px; justify-content: flex-end;">
+        <button class="tactical-btn btn-secondary" id="btn-print-pass">
+          🖨️ PRINT / EXPORT PDF
+        </button>
+        <button class="tactical-btn btn-primary" onclick="document.getElementById('survival-pass-modal').classList.remove('open');">
+          DONE
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT MODULE SCRIPTS -->
+  <script src="js/audio.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/map-engine.js"></script>
+  <script src="js/cyclone-module.js"></script>
+  <script src="js/flood-module.js"></script>
+  <script src="js/citizen-module.js"></script>
+  <script src="js/dispatch-module.js"></script>
+  <script src="js/sandbox-module.js"></script>
+  <script src="js/broadcast-module.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
